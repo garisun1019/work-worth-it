@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>这个班值得上吗？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', Arial, sans-serif;
+            background: #FFF9F9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #FFFFFF;
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 10px 20px rgba(255, 182, 193, 0.2);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        h1 {
+            color: #FF759E;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px #FFF;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        label {
+            display: block;
+            color: #6ECBDE;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #FFB4D8;
+            border-radius: 15px;
+            font-size: 16px;
+            background: #FFF;
+        }
+
+        .salary-type {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .salary-type button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 15px;
+            border: 2px solid #FFB4D8;
+            background: #FFF;
+            color: #FF759E;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .salary-type button.active {
+            background: #FF759E;
+            color: #FFF;
+        }
+
+        #progress-container {
+            margin: 20px 0;
+            background: #FFEFF4;
+            border-radius: 20px;
+            padding: 15px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            border-radius: 10px;
+            background: #FFD4E5;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #time-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #6ECBDE, #FF759E);
+            width: 0;
+            transition: width 0.5s ease;
+        }
+
+        #progress-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FFF;
+            font-size: 12px;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        }
+
+        .time-display {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+            color: #6ECBDE;
+            font-size: 12px;
+            text-align: center; /* 居中显示 */
+        }
+
+        .time-display span {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .time-display .time-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #FF759E;
+            background: #FFF6F9;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        #current-time {
+            text-align: center;
+            font-size: 1.2em;
+            color: #FF759E;
+            margin: 15px 0;
+            padding: 10px;
+            background: #FFF6F9;
+            border-radius: 10px;
+        }
+
+        .result {
+            text-align: center;
+            font-size: 24px;
+            color: #FF759E;
+            margin: 20px 0;
+            padding: 15px;
+            background: #FFF6F9;
+            border-radius: 15px;
+        }
+
+        .dynamic-text {
+            font-weight: bold;
+            color: #FF759E;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .calendar-container {
+            display: none;
+            margin: 20px 0;
+            background: #FFF;
+            border-radius: 20px;
+            padding: 15px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 5px;
+            width: 100%;
+        }
+
+        .calendar-day {
+            padding: 8px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: clamp(12px, 3vw, 16px);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-day.workday {
+            background: #6ECBDE;
+            color: #FFF;
+        }
+
+        .calendar-day.weekend {
+            background: #FF94A4;
+            color: #FFF;
+        }
+
+        .calendar-legend {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .calendar-grid {
+                gap: 3px;
+            }
+
+            .calendar-day {
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>这个班值得上吗？⏳</h1>
+        
+        <div id="current-time">🕒 当前时间：<span class="dynamic-text" id="live-clock"></span></div>
+
+        <div class="input-group">
+            <label>🏢 上班时间</label>
+            <input type="time" id="start-time" required>
+        </div>
+
+        <div class="input-group">
+            <label>🏡 下班时间</label>
+            <input type="time" id="end-time" required>
+        </div>
+
+        <div class="salary-type">
+            <button onclick="selectSalaryType('daily')" class="active">日薪</button>
+            <button onclick="selectSalaryType('monthly')">月薪</button>
+        </div>
+
+        <div class="input-group" id="daily-salary-group">
+            <label>💰 日薪金额（元）</label>
+            <input type="number" id="daily-salary" required>
+        </div>
+
+        <div class="input-group" id="monthly-salary-group" style="display:none">
+            <label>💰 月薪金额（元）</label>
+            <input type="number" id="monthly-salary">
+            <div style="font-size:12px; color:#888; margin-top:5px">
+                当前月份：<span class="dynamic-text" id="current-month"></span>，有效工作日：<span class="dynamic-text" id="workday-count">22</span>天
+            </div>
+        </div>
+
+        <div class="calendar-container" id="calendar-container">
+            <div class="calendar-header">
+                <button onclick="changeMonth(-1)" style="padding:5px 10px">←</button>
+                <h3 style="margin:0" id="calendar-month"></h3>
+                <button onclick="changeMonth(1)" style="padding:5px 10px">→</button>
+            </div>
+            <div class="calendar-grid" id="calendar-days"></div>
+            <div class="calendar-legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background:#6ECBDE"></span>工作日
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background:#FF94A4"></span>休息日
+                </div>
+            </div>
+        </div>
+
+        <div id="progress-container">
+            <div class="progress-bar">
+                <div id="time-progress"></div>
+                <span id="progress-percentage" class="dynamic-text">0%</span>
+            </div>
+            <div class="time-display">
+                <span>目前已工作 <span class="time-value" id="time-passed">0:00:00</span></span>
+                <span>剩余工作时间 <span class="time-value" id="time-remaining">0:00:00</span></span>
+            </div>
+        </div>
+
+        <div class="result">
+            <div style="font-size:40px">💸</div>
+            <span class="dynamic-text" id="earned">0.00</span> 元
+            <div class="monthly-total">
+                本月累计：<span class="dynamic-text" id="monthly-total">0.00</span> 元
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let salaryType = 'daily';
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let workdays = {};
+
+        function selectSalaryType(type) {
+            salaryType = type;
+            document.querySelectorAll('.salary-type button').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === (type === 'daily' ? '日薪' : '月薪'));
+            });
+            document.getElementById('daily-salary-group').style.display = type === 'daily' ? 'block' : 'none';
+            document.getElementById('monthly-salary-group').style.display = type === 'monthly' ? 'block' : 'none';
+            document.getElementById('calendar-container').style.display = type === 'monthly' ? 'block' : 'none';
+            
+            if(type === 'monthly') {
+                generateCalendar(currentYear, currentMonth);
+                updateWorkdayCount();
+            }
+            updateEarnings();
+        }
+
+        function generateCalendar(year, month) {
+            const firstDay = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const monthKey = `${year}-${month + 1}`;
+            
+            if(!workdays[monthKey]) {
+                workdays[monthKey] = [];
+                for(let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    if(date.getDay() !== 0 && date.getDay() !== 6) {
+                        workdays[monthKey].push(day);
+                    }
+                }
+            }
+
+            const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+            let calendarHTML = weekdays.map(d => `<div class="calendar-day">${d}</div>`).join('');
+            
+            const startOffset = (firstDay.getDay() + 6) % 7;
+            for(let i = 0; i < startOffset; i++) {
+                calendarHTML += `<div class="calendar-day"></div>`;
+            }
+
+            for(let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                const isWorkday = workdays[monthKey]?.includes(day);
+
+                let className = 'calendar-day';
+                if(isWorkday) className += ' workday';
+                else if(isWeekend) className += ' weekend';
+
+                calendarHTML += `<div class="${className}" 
+                    onclick="handleDayClick(${year},${month},${day})">${day}</div>`;
+            }
+            
+            document.getElementById('calendar-days').innerHTML = calendarHTML;
+            document.getElementById('calendar-month').textContent = `${year}年${month + 1}月`;
+            document.getElementById('current-month').textContent = `${year}年${month + 1}月`; // 更新当前月份
+        }
+
+        function handleDayClick(year, month, day) {
+            const monthKey = `${year}-${month + 1}`;
+            if(!workdays[monthKey]) workdays[monthKey] = [];
+            
+            const index = workdays[monthKey].indexOf(day);
+            if(index > -1) {
+                workdays[monthKey].splice(index, 1);
+            } else {
+                workdays[monthKey].push(day);
+            }
+            generateCalendar(year, month);
+            updateWorkdayCount();
+            updateEarnings();
+        }
+
+        function updateWorkdayCount() {
+            const monthKey = `${currentYear}-${currentMonth + 1}`;
+            document.getElementById('workday-count').textContent = getValidWorkdays(monthKey);
+        }
+
+        function getValidWorkdays(monthKey) {
+            return workdays[monthKey]?.length || 0;
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if(currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if(currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            generateCalendar(currentYear, currentMonth);
+            updateWorkdayCount();
+        }
+
+        function formatDuration(ms) {
+            const hours = Math.floor(ms / 3600000);
+            const minutes = Math.floor((ms % 3600000) / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function getActualWorkdays(now, monthKey) {
+            const currentDay = now.getDate();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            let actualDays = 0;
+
+            const totalWorkdays = getValidWorkdays(monthKey);
+            
+            for(let day = 1; day <= currentDay; day++) {
+                const isWorkday = workdays[monthKey]?.includes(day);
+                if(isWorkday) actualDays++;
+            }
+
+            const startTime = document.getElementById('start-time').value.split(':').map(Number);
+            const endTime = document.getElementById('end-time').value.split(':').map(Number);
+            const todayStart = new Date(year, month, currentDay, startTime[0], startTime[1]);
+            let todayEnd = new Date(year, month, currentDay, endTime[0], endTime[1]);
+            if(todayEnd <= todayStart) todayEnd.setDate(todayEnd.getDate() + 1);
+            
+            const totalMs = todayEnd - todayStart;
+            const elapsedMs = Math.max(now - todayStart, 0);
+            const todayProgress = totalMs > 0 ? Math.min(elapsedMs / totalMs, 1) : 0;
+
+            return (actualDays - 1) + todayProgress;
+        }
+
+        function updateEarnings() {
+            const now = new Date();
+            document.getElementById('live-clock').textContent = now.toTimeString().substr(0,8);
+
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+            const salary = parseFloat(
+                salaryType === 'daily' 
+                ? document.getElementById('daily-salary').value
+                : document.getElementById('monthly-salary').value
+            ) || 0;
+
+            const start = new Date(now.toDateString() + ' ' + startTime);
+            let end = new Date(now.toDateString() + ' ' + endTime);
+            if(end <= start) end.setDate(end.getDate() + 1);
+
+            const totalMs = end - start;
+            const elapsedMs = Math.max(now - start, 0);
+            const progress = Math.min((elapsedMs / totalMs) * 100, 100);
+
+            document.getElementById('time-progress').style.width = `${progress}%`;
+            document.getElementById('progress-percentage').textContent = `${progress.toFixed(0)}%`;
+            document.getElementById('time-passed').textContent = formatDuration(elapsedMs);
+            document.getElementById('time-remaining').textContent = formatDuration(totalMs - elapsedMs);
+
+            if(salaryType === 'daily') {
+                const earned = (salary * elapsedMs) / totalMs || 0;
+                document.getElementById('earned').textContent = earned.toFixed(2);
+                document.getElementById('monthly-total').textContent = '0.00';
+            } else {
+                const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
+                const totalWorkdays = getValidWorkdays(monthKey);
+                const actualDays = getActualWorkdays(now, monthKey);
+                const dailySalary = totalWorkdays > 0 ? salary / totalWorkdays : 0;
+                const todayEarn = dailySalary * (elapsedMs / totalMs);
+                const monthlyTotal = dailySalary * actualDays;
+
+                document.getElementById('earned').textContent = todayEarn.toFixed(2);
+                document.getElementById('monthly-total').textContent = monthlyTotal.toFixed(2);
+            }
+        }
+
+        // 初始化
+        document.getElementById('start-time').value = '08:30';
+        document.getElementById('end-time').value = '17:30';
+        document.getElementById('current-month').textContent = `${currentYear}年${currentMonth + 1}月`; // 初始月份
+
+        document.getElementById('monthly-salary').addEventListener('input', updateEarnings);
+        setInterval(updateEarnings, 1000);
+        updateEarnings();
+    </script>
+</body>
+</html>
